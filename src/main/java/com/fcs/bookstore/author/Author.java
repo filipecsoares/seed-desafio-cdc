@@ -1,9 +1,6 @@
 package com.fcs.bookstore.author;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 
@@ -12,9 +9,13 @@ public class Author {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    @Column(nullable = false, length = 150)
     private String name;
+    @Column(nullable = false, unique = true, length = 200)
     private String email;
+    @Column(nullable = false, length = 400)
     private String description;
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
     public Author() {
@@ -26,6 +27,11 @@ public class Author {
         this.email = email;
         this.description = description;
         this.createdAt = createdAt;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
     }
 
     public Long getId() {

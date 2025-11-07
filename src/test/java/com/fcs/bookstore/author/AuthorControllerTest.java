@@ -58,36 +58,6 @@ class AuthorControllerTest {
     }
 
     @Test
-    void shouldReturnCreatedAuthorWhenMinimalRequest() throws Exception {
-        // Given
-        AuthorRequest authorRequest = new AuthorRequest(
-                "Jane Smith",
-                "jane.smith@example.com",
-                null
-        );
-
-        Author savedAuthor = new Author(
-                2L,
-                "Jane Smith",
-                "jane.smith@example.com",
-                null,
-                Instant.now()
-        );
-
-        when(authorRepository.save(any(Author.class))).thenReturn(savedAuthor);
-
-        // When & Then
-        mockMvc.perform(post("/api/v1/authors")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(authorRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(2L))
-                .andExpect(jsonPath("$.name").value("Jane Smith"))
-                .andExpect(jsonPath("$.description").isEmpty());
-    }
-
-    @Test
     void shouldReturnBadRequestWhenInvalidJson() throws Exception {
         // Given
         String invalidJson = "{ \"name\": \"John Doe\", \"email\": }";
@@ -113,5 +83,66 @@ class AuthorControllerTest {
                         .contentType(MediaType.TEXT_PLAIN)
                         .content(objectMapper.writeValueAsString(authorRequest)))
                 .andExpect(status().isUnsupportedMediaType());
+    }
+
+    // New tests for validation of required fields and invalid email
+    @Test
+    void shouldReturnBadRequestWhenNameBlank() throws Exception {
+        // Given
+        AuthorRequest authorRequest = new AuthorRequest(
+                "",
+                "john.doe@example.com",
+                "Award-winning author"
+        );
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/authors")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authorRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenNameMissingInJson() throws Exception {
+        // Given: JSON without the `name` field
+        String jsonMissingName = "{ \"email\": \"john.doe@example.com\", \"description\": \"Award-winning author\" }";
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/authors")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMissingName))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenEmailInvalid() throws Exception {
+        // Given
+        AuthorRequest authorRequest = new AuthorRequest(
+                "John Doe",
+                "not-an-email",
+                "Award-winning author"
+        );
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/authors")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authorRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenDescriptionBlank() throws Exception {
+        // Given
+        AuthorRequest authorRequest = new AuthorRequest(
+                "John Doe",
+                "john.doe@example.com",
+                ""
+        );
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/authors")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authorRequest)))
+                .andExpect(status().isBadRequest());
     }
 }

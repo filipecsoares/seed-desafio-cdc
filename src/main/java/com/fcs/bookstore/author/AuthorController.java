@@ -1,5 +1,6 @@
 package com.fcs.bookstore.author;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,7 +18,7 @@ public class AuthorController {
     }
 
     @PostMapping
-    public ResponseEntity<AuthorResponse> createAuthor(@RequestBody AuthorRequest authorRequest) {
+    public ResponseEntity<AuthorResponse> createAuthor(@RequestBody @Valid AuthorRequest authorRequest) {
         final var author = authorRepository.save(authorRequest.toModel());
         return ResponseEntity.status(201).body(AuthorResponse.toResponse(author));
     }
