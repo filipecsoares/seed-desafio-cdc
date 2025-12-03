@@ -97,7 +97,7 @@ class AuthorControllerTest {
     void shouldReturnBadRequestWhenNameBlank() throws Exception {
         // Given
         AuthorRequest authorRequest = new AuthorRequest(
-                "",
+                null,
                 "john.doe@example.com",
                 "Award-winning author"
         );
@@ -159,5 +159,25 @@ class AuthorControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.description").value("description is required"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenEmailAlreadyExists() throws Exception {
+        // Given
+        AuthorRequest authorRequest = new AuthorRequest(
+                "John Doe",
+                "john.doe@example.com",
+                "Award-winning author"
+        );
+
+        when(authorRepository.existsByEmail("john.doe@example.com")).thenReturn(true);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/authors")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authorRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.email").value("email already exists"));
     }
 }

@@ -1,5 +1,6 @@
 package com.fcs.bookstore.config.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -27,5 +28,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleMalformedJson(HttpMessageNotReadableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "Malformed JSON request"));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        // this covers DB-level unique constraint violations (race conditions)
+        return ResponseEntity.status(409).body(Map.of("error", "Conflict: duplicate resource"));
     }
 }
