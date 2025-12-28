@@ -1,5 +1,6 @@
 package com.fcs.bookstore.category;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ public class CategoryController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<Void> createCategory(@RequestBody @Valid CategoryRequest request) {
         final var category = request.toModel();
         categoryRepository.save(category);
