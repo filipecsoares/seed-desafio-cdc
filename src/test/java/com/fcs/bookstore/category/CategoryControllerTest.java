@@ -2,6 +2,8 @@ package com.fcs.bookstore.category;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcs.bookstore.config.exception.GlobalExceptionHandler;
+import com.fcs.bookstore.shared.UniqueValueValidator;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -11,6 +13,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -28,6 +31,12 @@ class CategoryControllerTest {
     @MockitoBean
     private CategoryRepository categoryRepository;
 
+    @MockitoBean
+    private UniqueValueValidator uniqueValueValidator;
+
+    @MockitoBean
+    private EntityManagerFactory entityManagerFactory;
+
     @Test
     void shouldReturnCreatedCategoryWhenValidRequest() throws Exception {
         // Given
@@ -35,6 +44,7 @@ class CategoryControllerTest {
         final var categorySaved = new Category(1L, "Fiction");
 
         when(categoryRepository.save(any(Category.class))).thenReturn(categorySaved);
+        when(uniqueValueValidator.isValid(anyString(), any())).thenReturn(true);
 
         // When & Then
         mockMvc.perform(post("/api/v1/categories")
