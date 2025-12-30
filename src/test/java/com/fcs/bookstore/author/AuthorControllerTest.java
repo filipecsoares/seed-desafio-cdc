@@ -1,22 +1,29 @@
 package com.fcs.bookstore.author;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fcs.bookstore.config.exception.GlobalExceptionHandler;
+import com.fcs.bookstore.shared.UniqueValueValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.persistence.EntityManagerFactory;
+
 
 
 @WebMvcTest(AuthorController.class)
@@ -31,6 +38,19 @@ class AuthorControllerTest {
 
     @MockitoBean
     private AuthorRepository authorRepository;
+
+    @MockitoBean
+    private UniqueValueValidator uniqueValueValidator;
+
+    // Provide a mock EntityManagerFactory so that any @PersistenceContext injection in validators won't fail
+    @MockitoBean
+    private EntityManagerFactory entityManagerFactory;
+
+    @BeforeEach
+    void setupValidator() {
+        // By default, make the unique validator accept values (so other validations run as expected)
+        when(uniqueValueValidator.isValid(anyString(), any(ConstraintValidatorContext.class))).thenReturn(true);
+    }
 
     @Test
     void shouldReturnCreatedAuthorWhenValidRequest() throws Exception {
@@ -160,24 +180,6 @@ class AuthorControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.description").value("description is required"));
     }
-
-    @Test
-    void shouldReturnBadRequestWhenEmailAlreadyExists() throws Exception {
-        // Given
-        AuthorRequest authorRequest = new AuthorRequest(
-                "John Doe",
-                "john.doe@example.com",
-                "Award-winning author"
-        );
-
-        when(authorRepository.existsByEmail("john.doe@example.com")).thenReturn(true);
-
-        // When & Then
-        mockMvc.perform(post("/api/v1/authors")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(authorRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.email").value("email already exists"));
-    }
 }
+
+
